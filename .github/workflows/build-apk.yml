@@ -1,0 +1,44 @@
+name: Build APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Apply the cheat patch
+        run: |
+          git apply --check cubeevil4-sprint-keyitems.patch
+          git apply cubeevil4-sprint-keyitems.patch
+          git status --short
+
+      - name: Install build tools and the Android NDK r28c
+        run: sudo bash port/tools/whole_setup_linux.sh --android
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Build the game core (armeabi-v7a and arm64-v8a)
+        run: bash port/tools/whole_build_android.sh --abi all
+
+      - name: Build the APK
+        working-directory: port/android-decomp
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleCoreDebug --no-daemon
+
+      - name: Upload the APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: CubeEvil4-cheats-apk
+          path: port/android-decomp/app/build/outputs/apk/**/*.apk
+          if-no-files-found: error
+          
