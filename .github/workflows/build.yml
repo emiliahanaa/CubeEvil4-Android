@@ -16,3 +16,9 @@ jobs:
 
       - name: Apply patch
         run: git apply "cubeevil4-sprint-keyitems (2).patch"
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: CubeEvil4-APK
+          path: |
+            **/*.apk
